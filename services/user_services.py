@@ -98,27 +98,6 @@ async def update_user_by_id(db: AsyncSession, user_id: int, updates: UserUpdate,
         await db.rollback()
         raise Exception(str(e))
 
-# async def delete_user_by_id(db:AsyncSession, user_id: int, company: str):
-#     query = text("""
-#         UPDATE users 
-#         SET is_active = FALSE 
-#         WHERE id = :id AND company = :company AND is_active = TRUE
-#         RETURNING id, name, email, mobile_number, role, company, is_active
-#     """)
-#     try:
-#         result = await db.execute(query, {"id": user_id, "company": company})
-#         user = result.fetchone()
-#         if not user:
-#             raise NotFoundException(f"User with ID {user_id} not found")
-#         await db.commit()
-#         return user
-#     except NotFoundException:
-#         raise
-#     except Exception as e:
-#         await db.rollback()
-#         raise Exception(str(e))
-
-
 async def delete_user_by_id(db: AsyncSession, user_id: int, company: str):
     query = text("""
         UPDATE users 

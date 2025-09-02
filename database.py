@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 
 DATABASE_URL_A = "postgresql+asyncpg://gowthamraj:root@localhost:5433/company_a"
-DATABASE_URL_B = "postgresql+asyncpg://gowthamraj:root@localhost:5433/company_b"
+DATABASE_URL_B = "postgresql+asyncpg://gowthamraj:root@localhost:5432/company"
 
 engine_a = create_async_engine(DATABASE_URL_A, poolclass=NullPool)
 engine_b = create_async_engine(DATABASE_URL_B, poolclass=NullPool)
