@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, Boolean
 
 class User(Base):
     __tablename__ = "users"
@@ -10,3 +10,4 @@ class User(Base):
     mobile_number = Column(String, nullable=False)
     role = Column(String, nullable=False)
     company = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
