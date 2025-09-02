@@ -1,68 +1,63 @@
 from fastapi import APIRouter, Header, Depends, HTTPException
 from database import get_db
 from schemas.user_schemas import UserResponse, UserCreate, UserUpdate
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import JSONResponse
 from services.user_services import (create_user, get_users, get_user_by_id, 
                                     update_user_by_id, get_user_by_email,
                                     get_user_by_mobile, delete_user_by_id)
+from exceptions.exception_handler import NotFoundException
 
 
 routers = APIRouter(prefix="/api/users", tags=["Users"])
 
-def get_company_db(company: str = Header(...)):
-    return next(get_db(company)), company
+async def get_company_db(company: str = Header(...)):
+    async for db in get_db(company):
+        return db, company
 
 @routers.post("/create-user", response_model=UserResponse)
-def create_new_user(user: UserCreate, db_and_company: tuple[Session, str] = Depends(get_company_db)):
+async def create_new_user(
+    user: UserCreate,
+    db_and_company: tuple[AsyncSession, str] = Depends(get_company_db)):
     db, company = db_and_company
-    try:
-        result = create_user(db, user, company)
-        return UserResponse(
-            id=result[0],
-            name=result[1],
-            email=result[2],
-            mobile_number=result[3],
-            role=result[4],
-            company=result[5]
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    
+    result = await create_user(db, user, company)
+    return UserResponse(
+        id=result[0],
+        name=result[1],
+        email=result[2],
+        mobile_number=result[3],
+        role=result[4],
+        company=result[5],
+        is_active=result[6]
+    )
 
 
 @routers.get("/all-users", response_model=list[UserResponse])
-def list_users(skip: int = 0, limit: int = 10, db_and_company = Depends(get_company_db)):
+async def list_users(
+    skip: int = 0,
+    limit: int = 10,
+    db_and_company: tuple[AsyncSession, str] = Depends(get_company_db)
+    ):
     db, company = db_and_company
-    rows = get_users(db, skip, limit)
+    rows = await get_users(db, company, skip, limit)
     return [dict(r._mapping) for r in rows]
 
 @routers.get("/{user_id}", response_model=UserResponse)
-def read_user(user_id: int, db_and_company = Depends(get_company_db)):
+async def read_user(user_id: int, db_and_company: tuple[AsyncSession, str] = Depends(get_company_db)):
     db, company = db_and_company
-    row = get_user_by_id(db, user_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="User not found")
+    row = await get_user_by_id(db, user_id, company)
     return dict(row._mapping)
 
-@routers.put("/{user_id}", response_model=UserResponse)
-def update_user(
+@routers.put("/update/{user_id}", response_model=UserResponse)
+async def update_user(
     user_id: int, 
     updates: UserUpdate, 
-    db_and_company: tuple[Session, str] = Depends(get_company_db)
+    db_and_company: tuple[AsyncSession, str] = Depends(get_company_db)
 ):
     db, company = db_and_company
     try:
-        if updates.email:
-            existing_email = get_user_by_email(db, updates.email, company)
-            if existing_email and existing_email[0] != user_id:
-                raise HTTPException(status_code=400, detail="Email already exists")
-        
-        # Check if mobile number is being updated and if it already exists
-        if updates.mobile_number:
-            existing_mobile = get_user_by_mobile(db, updates.mobile_number, company)
-            if existing_mobile and existing_mobile[0] != user_id:
-                raise HTTPException(status_code=400, detail="Mobile number already exists")
-        row = update_user_by_id(db, user_id, updates, company)
+        row = await update_user_by_id(db, user_id, updates, company)
         if not row:
             raise HTTPException(status_code=404, detail="No fields updated")
 
@@ -80,12 +75,15 @@ def update_user(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@routers.delete("/{user_id}", status_code=200)
-def delete_user(user_id: int, db_and_company: tuple[Session, str] = Depends(get_company_db)):
+@routers.delete("/delete/{user_id}", status_code=200)
+async def delete_user(user_id: int, db_and_company: tuple[AsyncSession, str] = Depends(get_company_db)):
     db, company = db_and_company
-    row = delete_user_by_id(db, user_id, company)
-    if not row:
-        raise HTTPException(status_code=404, detail="User not found")
-    return JSONResponse(
-        content={"message": "User deleted successfully"}
-    )
+    try:
+        await delete_user_by_id(db, user_id, company)
+        return JSONResponse(
+            content={"message": "User deleted successfully"}
+        )
+    except NotFoundException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

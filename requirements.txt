@@ -1,3 +1,5 @@
 fastapi
-uvicorn
-psycopg
+uvicorn[standard]
+asyncpg
+sqlalchemy[asyncio]
+pydantic[email]

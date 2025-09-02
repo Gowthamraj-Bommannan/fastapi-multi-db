@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from fastapi import HTTPException
+from exceptions.exception_handler import AlreadyExistsException
 
-def validate_unique_email(db: Session,
+async def validate_unique_email(db: AsyncSession,
                           email: str,
                           company: str,
                           exclude_user_id: int | None = None):
@@ -11,11 +11,12 @@ def validate_unique_email(db: Session,
                  company = :company AND is_active = TRUE
                  """
                  )
-    result = db.execute(query, {"email": email, "company": company}).fetchone()
-    if result and (exclude_user_id is None or result[0] != exclude_user_id):
-        raise HTTPException(status_code=400, detail="Email already exists")
+    result = await db.execute(query, {"email": email, "company": company})
+    user = result.fetchone()
+    if user and (exclude_user_id is None or user[0] != exclude_user_id):
+        raise AlreadyExistsException(f"Email {email} already exists")
     
-def validate_unique_mobile(db: Session,
+async def validate_unique_mobile(db: AsyncSession,
                           mobile_number: str,
                           company: str,
                           exclude_user_id: int | None = None):
@@ -24,6 +25,7 @@ def validate_unique_mobile(db: Session,
                  company = :company AND is_active = TRUE
                  """
                  )
-    result = db.execute(query, {"mobile_number": mobile_number, "company": company}).fetchone()
-    if result and (exclude_user_id is None or result[0] != exclude_user_id):
-        raise HTTPException(status_code=400, detail="Mobile number already exists")
+    result = await db.execute(query, {"mobile_number": mobile_number, "company": company})
+    user = result.fetchone()
+    if user and (exclude_user_id is None or user[0] != exclude_user_id):
+        raise AlreadyExistsException(f"Mobile number {mobile_number} already exists")
