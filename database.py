@@ -3,12 +3,13 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine, async_sessionmaker, AsyncSession
     )
 from sqlalchemy.pool import NullPool
+import os
 
-DATABASE_URL_A = "postgresql+asyncpg://gowthamraj:root@localhost:5433/company_a"
-DATABASE_URL_B = "postgresql+asyncpg://gowthamraj:root@localhost:5432/company"
+DATABASE_URL_A = os.getenv("DATABASE_URL_A", "postgresql+asyncpg://gowthamraj:root@company_a-service:5433/company_a")
+DATABASE_URL_B = os.getenv("DATABASE_URL_B", "postgresql+asyncpg://gowthamraj:root@company_b-service:5432/company")
 
-engine_a = create_async_engine(DATABASE_URL_A, poolclass=NullPool)
-engine_b = create_async_engine(DATABASE_URL_B, poolclass=NullPool)
+engine_a = create_async_engine(DATABASE_URL_A, echo=False, future=True)
+engine_b = create_async_engine(DATABASE_URL_B, echo=False, future=True)
 
 AsyncSessionLocal_A = async_sessionmaker(
     engine_a,

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users-app
+  template:
+    metadata:
+      labels:
+        app: users-app
+    spec:
+      containers:
+      - name: users-app
+        image: gowthamrajbommannan/sample:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL_A
+          value: "postgresql+asyncpg://gowthamraj:root@company-a-service:5433/company_a"
+        - name: DATABASE_URL_B
+          value: "postgresql+asyncpg://gowthamraj:root@company-b-service:5432/company"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3

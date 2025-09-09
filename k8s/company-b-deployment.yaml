@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: company-b-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: company-b
+  template:
+    metadata:
+      labels:
+        app: company-b
+    spec:
+      containers:
+      - name: company-b-db
+        image: postgres:17
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "company"
+        - name: POSTGRES_USER
+          value: "gowthamraj"
+        - name: POSTGRES_PASSWORD
+          value: "root"

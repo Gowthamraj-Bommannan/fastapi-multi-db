@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: company-a-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5433
+    targetPort: 5432
+  selector:
+    app: company-a
