@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: users-app
-        image: gowthamrajbommannan/sample:latest
+        image: gowthamrajbommannan/sample:v2.0
         ports:
         - containerPort: 8000
         env:

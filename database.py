@@ -8,8 +8,8 @@ import os
 DATABASE_URL_A = os.getenv("DATABASE_URL_A", "postgresql+asyncpg://gowthamraj:root@company_a-service:5433/company_a")
 DATABASE_URL_B = os.getenv("DATABASE_URL_B", "postgresql+asyncpg://gowthamraj:root@company_b-service:5432/company")
 
-engine_a = create_async_engine(DATABASE_URL_A, echo=False, future=True)
-engine_b = create_async_engine(DATABASE_URL_B, echo=False, future=True)
+engine_a = create_async_engine(DATABASE_URL_A, echo=False, poolclass=NullPool)
+engine_b = create_async_engine(DATABASE_URL_B, echo=False, poolclass=NullPool)
 
 AsyncSessionLocal_A = async_sessionmaker(
     engine_a,

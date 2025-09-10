@@ -13,7 +13,10 @@ routers = APIRouter(prefix="/api/users", tags=["Users"])
 
 async def get_company_db(company: str = Header(...)):
     async for db in get_db(company):
-        return db, company
+        try:
+            yield db, company
+        finally:
+            pass
 
 @routers.post("/create-user", response_model=UserResponse)
 async def create_new_user(
@@ -87,3 +90,12 @@ async def delete_user(user_id: int, db_and_company: tuple[AsyncSession, str] = D
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@routers.get("/search/email/{email}", response_model=UserResponse)
+async def search_user_by_email(
+    email: str, 
+    db_and_company: tuple[AsyncSession, str] = Depends(get_company_db)
+):
+    db, company = db_and_company
+    row = await get_user_by_email(db, email, company)
+    return dict(row._mapping)

@@ -106,7 +106,6 @@ async def delete_user_by_id(db: AsyncSession, user_id: int, company: str):
         RETURNING id, name, email, mobile_number, role, company, is_active
     """)
     try:
-        print("Deleting user:", user_id, "company:", company) 
         result = await db.execute(query, {"id": user_id, "company": company})
         user = result.fetchone()
         if not user:
@@ -128,9 +127,12 @@ async def get_user_by_email(db: AsyncSession, email: str, company: str):
     """)
     try:
         result = await db.execute(query, {"email": email, "company": company})
-        return result.fetchone()
+        user = result.fetchone()
+        if not user:
+            raise NotFoundException(f"User with email {email} not found")
+        return user
     except NotFoundException:
-        raise NotFoundException(f"User with email {email} not found")
+        raise
     except Exception as e:
         raise Exception(str(e))
 
@@ -142,8 +144,11 @@ async def get_user_by_mobile(db: AsyncSession, mobile_number: str, company: str)
     """)
     try:
         result = await db.execute(query, {"mobile_number": mobile_number, "company": company})
-        return result.fetchone()
+        user = result.fetchone()
+        if not user:
+            raise NotFoundException(f"User with mobile number {mobile_number} not found")
+        return user
     except NotFoundException:
-        raise NotFoundException(f"User with mobile number {mobile_number} not found")
+        raise
     except Exception as e:
         raise Exception(str(e))
